@@ -1,29 +1,48 @@
-#s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\2048.jl"
-function printM(x::Matrix, name::AbstractString="Matrix:")
-    s = string(x)
-    s = replace(s,'[',name*"\n")
-    s = replace(s,"; ","\n")
-    if !(eltype(x) <: Int)
-        s = replace(s,' ','\t')
-    end
-    s = replace(s,']','\n')
+"""
+    printM(m [, name="Matrix:\n"])
+
+Prints matrix m without separators and []. name is printed as header.
+
+# Example
+```
+julia> printM([1 2 3; 4 5 6])
+Matrix:
+1 2 3
+4 5 6
+
+julia>
+```
+"""
+function printM(x::Matrix, name::AbstractString="Matrix:\n")
+    s = name*string(x)
+    s = replace(s,"["=>"")
+    s = replace(s,"]"=>"\n")
+    s = replace(s,"; "=>"\n")
     print(s)
     #return s
 end
 
-function newGame(t::Type=Int64, siz::Int64=4)
-    tk48 = zeros(t,siz,siz)
+"""
+    newGame(T=Int, n=4)
+
+Returns a board of size n x n where the types of theelements are T and 1 legal move has been made
+"""
+function newGame(T::Type=Int, siz::Int=4)
+    tk48 = zeros(T,siz,siz)
     tk48[rand(1:(siz*siz))] = 1
     score = 0
     while iszero(score)
         score = play!(tk48,score,rand(1:4))
     end
-    return tk48, convert(t,0)
+    return tk48, convert(T,0)
 end
-#=  moveDir are very similar, minor adjustments for each dir
-    only moveDown has any commentary
-    Theese functions alter the game board according to Dir,
-    they also return Δscore and a bool for legal move =#
+
+"""
+    moveDown!(game) -> move_score
+
+Executes moving the pieces down in game board. Returns the score produced by this move.
+Other moves are moveRight!, moveUp! and moveLeft!
+"""
 function moveDown!(tk48::Matrix)
     # score is not yet final, moved checks for any alteration
     score = 0
@@ -51,6 +70,12 @@ function moveDown!(tk48::Matrix)
     end
     return score, moved
 end
+"""
+    moveUp!(game) -> move_score
+
+Executes moving the pieces up in game board. Returns the score produced by this move.
+Other moves are moveRight!, moveDown! and moveLeft!
+"""
 function moveUp!(tk48::Matrix)
     score = 0
     moved = false
@@ -74,6 +99,12 @@ function moveUp!(tk48::Matrix)
     end
     return score, moved
 end
+"""
+    moveRight!(game) -> move_score
+
+Executes moving the pieces down in game board. Returns the score produced by this move.
+Other moves are moveDown!, moveUp! and moveLeft!
+"""
 function moveRight!(tk48::Matrix)
     score = 0
     moved = false
@@ -98,6 +129,12 @@ function moveRight!(tk48::Matrix)
     end
     return score, moved
 end
+"""
+    moveLeft!(game) -> move_score
+
+Executes moving the pieces down in game board. Returns the score produced by this move.
+Other moves are moveDown!, moveUp! and moveRight!
+"""
 function moveLeft!(tk48::Matrix)
     score = 0
     moved = false
@@ -145,12 +182,12 @@ function otherUp(tk48::Matrix)
 end
 
 function delta(tk48::Matrix)
-    lin = Matrix{eltype(tk48)}(size(tk48).-(0,1))
+    lin = Matrix{eltype(tk48)}(undef, size(tk48).-(0,1))
     aux = otherLeft(tk48)
     for j in 1:size(lin)[2]
         lin[:,j] = aux[:,j]-aux[:,j+1]
     end
-    col = Matrix{eltype(tk48)}(size(tk48).-(1,0))
+    col = Matrix{eltype(tk48)}(undef, size(tk48).-(1,0))
     aux = otherUp(tk48)
     for i in 1:size(col)[1]
         col[i,:] = aux[i,:]-aux[i+1,:]
@@ -164,7 +201,7 @@ featureNotZeros(x::Matrix) = sum(.!iszero.(x))
 function featureMaxCornerAmp(x::Matrix)
     k1 = maximum([x[1,1],x[1,end],x[end,1],x[end,end]])
     k = maximum(x)
-    iszero(k-k1)? k-= 1. : k = 0.
+    iszero(k-k1) ? k-= 1.0 : k = 0.
     return k
 end
 function featureAmp(x::Matrix; b::Bool=false)
@@ -173,7 +210,7 @@ function featureAmp(x::Matrix; b::Bool=false)
         if !iszero(x[i,:])
             push!(l, maximum(x[i,:])-minimum(filter(!iszero,x[i,:])))
         else
-            push!(l,0.)
+            push!(l,0.0)
         end
     end
     c = Float64[]
@@ -193,7 +230,7 @@ end
 featurePoints(del::NTuple) = count.(iszero,del)
 featurePoints(x::Matrix) = 16-sum(count.(iszero,delta(x)))
 
-t = [2 1 1 1; 4 2 4 3; 2 2 4 1; 2 1 4 4] # pra testar signflip
+signfliptest = :(t=[2 1 1 1; 4 2 4 3; 2 2 4 1; 2 1 4 4]) # pra testar signflip
 function countFlips(v::Vector)
     if iszero(v)
         return 0
@@ -224,10 +261,10 @@ function featureSum(x::Matrix)
     return s
 end
 
-rotateClock(tk48::Matrix) = flipdim(tk48,1)'
-rotateCounterClock(tk48::Matrix) = flipdim(tk48,2)'
+rotateClock(tk48::Matrix) = reverse(tk48,dims=1)'
+rotateCounterClock(tk48::Matrix) = reverse(tk48,dims=2)'
 function double!(tk48::Matrix)
-    x = find(!iszero,tk48)
+    x = findall(!iszero,tk48)
     for i in x
         tk48[i] += 1
     end
@@ -269,7 +306,7 @@ function play!(tk48::Matrix, pscore::Real, dir::Int64; dob::Bool=false)
             end
         end
         # choose new tile and add its score
-        i = rand(find(iszero,tk48))
+        i = rand(findall(iszero,tk48))
         k = rand(1:10)
         k == 2 ? tk48[i] = 2 : tk48[i] = 1
     end
@@ -284,7 +321,7 @@ function naiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
         dir = -1
     end
     p = collect(seed:dir:seed+(3*dir))
-    p = map(x-> iszero(x)? x=4: x=x ,p)
+    p = map(x-> iszero(x) ? x=4 : x=x ,p)
     for i in p
         if !iszero(play!(copy(tk48),0,i))
             return i
@@ -312,7 +349,7 @@ function greedyNaiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
         dir = -1
     end
     p = collect(seed:dir: seed+(3*dir))
-    p = map(x-> mod(x,4)==0? x=4: x=mod(x,4) ,p)
+    p = map(x-> mod(x,4)==0 ? x=4 : x=mod(x,4) ,p)
     s = zeros(eltype(tk48),4)
     for i in 1:4
         s[i] = play!(copy(tk48),0,p[i])
@@ -322,7 +359,8 @@ function greedyNaiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
     elseif s[2] > s[1] > 0
         return p[2]
     else
-        return p[max(findfirst(s),1)]
+        aux = findfirst(!iszero,s)
+        return p[ aux == nothing ? 1 : aux ]
     end
 end
 
@@ -331,7 +369,7 @@ function greedyFeatureStrats(tk48::Matrix)
     min_ind = 0
     for i in 1:4
         x = copy(tk48)
-        iszero(play!(x,0,i))? aux = Inf64: aux = featureSum(x)
+        iszero(play!(x,0,i)) ? aux = Inf64 : aux = featureSum(x)
         if aux < min
             min = aux
             min_ind = i
@@ -405,4 +443,13 @@ function greedyNetPlay!(tk48::Matrix,pscore::Real,w::Vector)
         y[i] -= 1
     end
     return auxscore
+end
+
+function playStrategy(f)
+    G, score = newGame()
+    while !gameOver(G)
+        score = f(G, score)
+    end
+    printM(G,"\nscore: $(score)\n")
+    #return G, score
 end

@@ -2,19 +2,19 @@
 s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\2048.jl"
 include(s)
 
-reLU(x::Number) = max(0.,x)
-∇reLU(x::Number) = x >= 0.? 1. : 0.
+reLU(x::Number) = max(0., x)
+∇reLU(x::Number) = x >= 0. ? 1. : 0.
 
-reLU2(x::Number) = x <= .5? max(0.,x): min(x,1.)
-∇reLU2(x::Number) = 0. <= x <= 1.? 1. : 0.
+reLU2(x::Number) = x <= .5 ? max(0., x) : min(x, 1.)
+∇reLU2(x::Number) = 0. <= x <= 1. ? 1. : 0.
 
 pwLin(x::Number) = max(.001*x,x)
-∇pwLin(x::Number) = x >= 0.? 1. : .001 # mandar saída pra cá
+∇pwLin(x::Number) = x >= 0. ? 1. : .001 # mandar saída pra cá
 
 sigm(x::Number) = (1./(1+exp(-x)))
 ∇sigm(x::Number) = x*(1-x) # mandar saída pra cá
 
-∇tanh(x::Number) = 1.-x^2 # mandar saída pra cá
+∇tanh(x::Number) = 1. - x^2 # mandar saída pra cá
 
 mse(z::Vector) = 0.5*sum(abs2,z)
 function mse(z::Matrix)
@@ -177,7 +177,7 @@ function oneHotVector(tk48::Matrix{Int64})
     x = Float64[]
     for i in tk48
         aux = zeros(Float64,12)
-        iszero(i)? aux[12] = 1.: aux[i] = 1.
+        iszero(i) ? aux[12] = 1. : aux[i] = 1.
         append!(x,aux)
     end
     return x
@@ -193,7 +193,7 @@ function oneHotBatch(tk48::Matrix,w::Vector,γ::Float64=0.)
             y[i]-=.1
         end
         if gameOver(aux)
-            maximum(aux) < 11? y[i]-=.1: y[i]=1.
+            maximum(aux) < 11 ? y[i] -= .1 : y[i] = 1.
         elseif γ > 0
             #=z = similar(y)
             for j in 1:4
@@ -397,7 +397,7 @@ for j in 20:-1:1
         tk48,score = newGame(Int64)
         while !gameOver(tk48) && debug>0
             aux = safeFeatureNetPlay!(tk48,score,w,γ)
-            iszero(aux-score)? debug = 0: score = aux
+            iszero(aux-score) ? debug = 0 : score = aux
             #printM(tk48,"score: "*string(score))
         end
         #printM(tk48,"score: "*string(score))

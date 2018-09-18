@@ -12,7 +12,7 @@ y = convert(Matrix{Float64},dtrn[1][2])
 
 feedf(w::Matrix, x::Matrix) = w*x
 pwLin(w::Matrix) = map(x->max(.01*x,x),w)
-∇pwLin(w::Matrix) = map(x-> x < 0? x = .01: x = 1., w)
+∇pwLin(w::Matrix) = map(x-> x < 0 ? x = .01 : x = 1., w)
 ∇tanh(w::Matrix) = map(x-> 1-x*x, w)
 ∇tanh(w::Vector) = map(x-> 1-x*x, w)
 softplus(w::Real) = log(1.+e^w)

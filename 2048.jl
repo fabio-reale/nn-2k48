@@ -181,6 +181,8 @@ function otherUp(tk48::Matrix)
     return aux
 end
 
+#= delta is ment to capture how good a board is based on the difference
+each tile has with its adjacent tiles =#
 function delta(tk48::Matrix)
     lin = Matrix{eltype(tk48)}(undef, size(tk48).-(0,1))
     aux = otherLeft(tk48)
@@ -275,23 +277,16 @@ end
 function gameOver(tk48::Matrix)
     win = maximum(tk48) >= 11
     moved = moveUp!(copy(tk48))[2]
-    moved |= moveDown!(copy(tk48))[2]
+    #moved |= moveDown!(copy(tk48))[2]
     moved |= moveRight!(copy(tk48))[2]
-    moved |= moveLeft!(copy(tk48))[2]
+    #moved |= moveLeft!(copy(tk48))[2]
     return !moved || win
 end
 
 function play!(tk48::Matrix, pscore::Real, dir::Int64; dob::Bool=false)
-    if mod(dir,4) == 1
-        f = moveUp!
-    elseif mod(dir,4) == 3
-        f = moveDown!
-    elseif mod(dir,4) == 2
-        f = moveRight!
-    elseif mod(dir,4) == 0
-        f = moveLeft!
-    end
-    score, moved = f(tk48)
+    f = [moveUp!, moveDown!, moveRight!, moveLeft!]
+    dir =
+    score, moved = f[1+mod(dir,4)](tk48)
     if moved
         # add movement score
         pscore += score+1
@@ -315,19 +310,17 @@ function play!(tk48::Matrix, pscore::Real, dir::Int64; dob::Bool=false)
 end
 
 #up = 1; down = 3; right = 2; left = 0;
-
-function naiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
+function naiveStrats(tk48::Matrix,seed::Int64=1,dir::Int64=1)
     if  dir != 1
         dir = -1
     end
     p = collect(seed:dir:seed+(3*dir))
-    p = map(x-> iszero(x) ? x=4 : x=x ,p)
     for i in p
         if !iszero(play!(copy(tk48),0,i))
             return i
         end
     end
-    return 1
+    return seed
 end
 
 function greedyStrats(tk48::Matrix)
@@ -344,12 +337,11 @@ function greedyStrats(tk48::Matrix)
     return max_ind
 end
 
-function greedyNaiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
+function greedyNaiveStrats(tk48::Matrix,seed::Int64=1,dir::Int64=1)
     if  dir != 1
         dir = -1
     end
     p = collect(seed:dir: seed+(3*dir))
-    p = map(x-> mod(x,4)==0 ? x=4 : x=mod(x,4) ,p)
     s = zeros(eltype(tk48),4)
     for i in 1:4
         s[i] = play!(copy(tk48),0,p[i])
@@ -360,7 +352,7 @@ function greedyNaiveStrats(tk48::Matrix,seed::Int64=5,dir::Int64=1)
         return p[2]
     else
         aux = findfirst(!iszero,s)
-        return p[ aux == nothing ? 1 : aux ]
+        return p[ aux == nothing ? seed : aux ]
     end
 end
 

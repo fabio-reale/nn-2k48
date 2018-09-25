@@ -375,25 +375,6 @@ function greedyStrats(tk48::Matrix)
     return max_ind
 end
 
-function greedyNaiveStrats(tk48::Matrix{T},seed::Int=1,dir::Int=1) where T
-    if  dir != 1
-        dir = -1
-    end
-    p = collect(seed:dir: seed+(3*dir))
-    s = zeros(T,4)
-    for i in 1:4
-        s[i] = play!(copy(tk48),0,p[i])
-    end
-    if s[3] > s[2] > s[1]
-        return p[3]
-    elseif s[2] > s[1] > 0
-        return p[2]
-    else
-        aux = findfirst(!iszero,s)
-        return p[ aux == nothing ? seed : aux ]
-    end
-end
-
 function greedyFeatureStrats(tk48::Matrix)
     min = Inf
     min_ind = 0
@@ -455,7 +436,6 @@ end
 
 naivePlay!(tk48::Matrix,pscore::Real;seed::Int64=1,dir::Int64=1,double::Bool=false) = play!(tk48,pscore,naiveStrats(tk48,seed,dir),dob=double)
 greedyPlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyStrats(tk48),dob=double)
-greedyNaivePlay!(tk48::Matrix,pscore::Real;seed::Int64=1,dir::Int64=1,double::Bool=false) = play!(tk48,pscore,greedyNaiveStrats(tk48,seed,dir),dob=double)
 greedyFeaturePlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyFeatureStrats(tk48),dob=double)
 
 greedyFeatureNetPlay!(tk48::Matrix,pscore::Real,w::Vector,γ::Float64) = play!(tk48,pscore,greedyFeatureNetStrats(tk48,w,γ))

@@ -1,6 +1,4 @@
-#s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\tk48NN.jl"
-s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\2048.jl"
-include(s)
+include("2048.jl")
 
 reLU(x::Number) = max(0., x)
 ∇reLU(x::Number) = x >= 0. ? 1. : 0.

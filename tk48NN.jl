@@ -144,6 +144,7 @@ function createFeatureVector(tk48::Matrix)
     push!(x,featureDelta(tk48)./80.)
     t = delta(tk48)
     aux = featureSignFlip(t)./3.
+    # deleted featurePoints, left it here for fear of dimension mismatch 
     append!(x, featurePoints(t)./10.)
     append!(x, aux[1])
     append!(x, aux[2])

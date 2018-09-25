@@ -300,9 +300,14 @@ function featureSum(x::Matrix)
     s+= featureDelta(x)
     return s
 end
-
-rotateClock(tk48::Matrix) = reverse(tk48,dims=1)'
-rotateCounterClock(tk48::Matrix) = reverse(tk48,dims=2)'
+"""
+Rotate game in desired direction
+"""
+rotateClock(tk48::Matrix) = reverse(tk48',dims=2)
+rotateCounterClock(tk48::Matrix) = reverse(tk48',dims=1)
+"""
+Doubles every non-empty tile in game board
+"""
 function double!(tk48::Matrix)
     x = findall(!iszero,tk48)
     for i in x

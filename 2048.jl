@@ -231,19 +231,29 @@ featureZeros(x::Matrix) = count(iszero, x)
 Returns the count of non-zeros on game board
 """
 featureNotZeros(x::Matrix) = count(!iszero, x)
+"""
+    featureMaxCornerAmp(game) -> Float64
+
+Returns amplitude from max tile in corner and max tile in game board
+"""
 function featureMaxCornerAmp(x::Matrix)
     k1 = maximum([x[1,1],x[1,end],x[end,1],x[end,end]])
     k = maximum(x)
-    iszero(k-k1) ? k-= 1.0 : k = 0.
-    return k
+    return float(k-k1)
 end
+"""
+    featureAmp(game [, b = false]) -> Float or Tuple
+
+Returns matrices with amplitudes by line and column.
+If b = true returns the sum of all amplitudes.
+"""
 function featureAmp(x::Matrix; b::Bool=false)
     l = Float64[]
     for i in 1:size(x)[1]
         if !iszero(x[i,:])
             push!(l, maximum(x[i,:])-minimum(filter(!iszero,x[i,:])))
         else
-            push!(l,0.0)
+            push!(l, 0.0)
         end
     end
     c = Float64[]
@@ -251,7 +261,7 @@ function featureAmp(x::Matrix; b::Bool=false)
         if !iszero(x[:,j])
             push!(c, maximum(x[:,j])-minimum(filter(!iszero,x[:,j])))
         else
-            push!(c,0.)
+            push!(c, 0.0)
         end
     end
     if b
@@ -260,8 +270,6 @@ function featureAmp(x::Matrix; b::Bool=false)
         return l,c
     end
 end
-featurePoints(del::NTuple) = count.(iszero,del)
-featurePoints(x::Matrix) = 16-sum(count.(iszero,delta(x)))
 
 signfliptest = :(t=[2 1 1 1; 4 2 4 3; 2 2 4 1; 2 1 4 4]) # pra testar signflip
 function countFlips(v::Vector)
@@ -289,7 +297,6 @@ function featureSum(x::Matrix)
     s+= featureSignFlip(x)
     s+= 10.0-featureMaxCornerAmp(x)
     s+= featureAmp(x,b=true) # alterei de forma que não retorna número
-    s+= featurePoints(x)
     s+= featureDelta(x)
     return s
 end
@@ -304,23 +311,23 @@ function double!(tk48::Matrix)
     return tk48
 end
 
-# Returns true if game is over
+"""
+Returns true if game is over
+"""
 function gameOver(tk48::Matrix)
     win = maximum(tk48) >= 11
     moved = moveUp!(copy(tk48))[2]
-    #moved |= moveDown!(copy(tk48))[2]
+    moved |= moveDown!(copy(tk48))[2]
     moved |= moveRight!(copy(tk48))[2]
-    #moved |= moveLeft!(copy(tk48))[2]
+    moved |= moveLeft!(copy(tk48))[2]
     return !moved || win
 end
 
-function play!(tk48::Matrix, pscore::Real, dir::Int64; dob::Bool=false)
-    f = [moveUp!, moveDown!, moveRight!, moveLeft!]
-    dir =
+function play!(tk48::Matrix, pscore::Real, dir::Int; dob::Bool=false)
+    f = [moveUp!, moveRight!, moveDown!, moveLeft!]
     score, moved = f[1+mod(dir,4)](tk48)
     if moved
-        # add movement score
-        pscore += score+1
+        pscore += score+1 # legal moves get a point
         if maximum(tk48) >= 11
             pscore += 20
         end
@@ -340,8 +347,8 @@ function play!(tk48::Matrix, pscore::Real, dir::Int64; dob::Bool=false)
     return pscore
 end
 
-#up = 1; down = 3; right = 2; left = 0;
-function naiveStrats(tk48::Matrix,seed::Int64=1,dir::Int64=1)
+#up = 4; down = 2; right = 1; left = 3;
+function naiveStrats(tk48::Matrix,seed::Int=1,dir::Int=1)
     if  dir != 1
         dir = -1
     end
@@ -368,12 +375,12 @@ function greedyStrats(tk48::Matrix)
     return max_ind
 end
 
-function greedyNaiveStrats(tk48::Matrix,seed::Int64=1,dir::Int64=1)
+function greedyNaiveStrats(tk48::Matrix{T},seed::Int=1,dir::Int=1) where T
     if  dir != 1
         dir = -1
     end
     p = collect(seed:dir: seed+(3*dir))
-    s = zeros(eltype(tk48),4)
+    s = zeros(T,4)
     for i in 1:4
         s[i] = play!(copy(tk48),0,p[i])
     end
@@ -388,11 +395,11 @@ function greedyNaiveStrats(tk48::Matrix,seed::Int64=1,dir::Int64=1)
 end
 
 function greedyFeatureStrats(tk48::Matrix)
-    min = Inf64
+    min = Inf
     min_ind = 0
     for i in 1:4
         x = copy(tk48)
-        iszero(play!(x,0,i)) ? aux = Inf64 : aux = featureSum(x)
+        iszero(play!(x,0,i)) ? aux = Inf : aux = featureSum(x)
         if aux < min
             min = aux
             min_ind = i
@@ -404,9 +411,9 @@ end
 function greedyNetStrats(tk48::Matrix, w::Vector)
     x = copy(tk48)
     x = reshape(x,prod(size(tk48)),1)
-    x *= .05
+    x *= 0.05
     y = feedf(w,x)[end]
-    y *= 20.
+    y *= 20.0
     y = round.(y)
     return y
 end

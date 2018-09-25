@@ -43,7 +43,7 @@ end
 Executes moving the pieces down in game board. Returns the score produced by this move.
 Other moves are moveRight!, moveUp! and moveLeft!
 """
-function moveDown!(tk48::Matrix)
+function moveDown!(tk48::Matrix{T}) where T
     # score is not yet final, moved checks for any alteration
     score = 0
     moved = false
@@ -64,7 +64,7 @@ function moveDown!(tk48::Matrix)
             i -= 1
         end
         # add necessary zeros to the beginning of columns
-        z = append!(zeros(eltype(tk48),siz-k),z)
+        z = append!(zeros(T,siz-k),z)
         moved |= !iszero(tk48[:,j] - z)
         tk48[:,j] = z
     end
@@ -76,7 +76,7 @@ end
 Executes moving the pieces up in game board. Returns the score produced by this move.
 Other moves are moveRight!, moveDown! and moveLeft!
 """
-function moveUp!(tk48::Matrix)
+function moveUp!(tk48::Matrix{T}) where T
     score = 0
     moved = false
     siz = size(tk48,1)
@@ -93,7 +93,7 @@ function moveUp!(tk48::Matrix)
             end
             i +=1
         end
-        append!(z, zeros(eltype(tk48),siz-k))
+        append!(z, zeros(T,siz-k))
         moved |= !iszero(tk48[:,j] - z)
         tk48[:,j] = z
     end
@@ -105,7 +105,7 @@ end
 Executes moving the pieces down in game board. Returns the score produced by this move.
 Other moves are moveDown!, moveUp! and moveLeft!
 """
-function moveRight!(tk48::Matrix)
+function moveRight!(tk48::Matrix{T}) where T
     score = 0
     moved = false
     siz = size(tk48,1)
@@ -123,7 +123,7 @@ function moveRight!(tk48::Matrix)
             end
             j -= 1
         end
-        z = append!(zeros(eltype(tk48),siz-k),z)
+        z = append!(zeros(T,siz-k),z)
         moved |= !iszero(tk48[i,:] - z)
         tk48[i,:] = z
     end
@@ -135,7 +135,7 @@ end
 Executes moving the pieces down in game board. Returns the score produced by this move.
 Other moves are moveDown!, moveUp! and moveRight!
 """
-function moveLeft!(tk48::Matrix)
+function moveLeft!(tk48::Matrix{T}) where T
     score = 0
     moved = false
     siz = size(tk48,1)
@@ -152,54 +152,85 @@ function moveLeft!(tk48::Matrix)
             end
             j +=1
         end
-        append!(z, zeros(eltype(tk48),siz-k))
+        append!(z, zeros(T,siz-k))
         moved |= !iszero(tk48[i,:] - z)
         tk48[i,:] = z
     end
     return score, moved
 end
 
-function otherLeft(tk48::Matrix)
-    aux = copy(tk48)
+"""
+    otherLeft(game)
+
+Returns a matrix where all non zero elements are pushes to the left.
+"""
+function otherLeft(tk48::Matrix{T}) where T
+    aux = similar(tk48)
     siz = size(aux,1)
     for i in 1:siz
-        z = filter!(!iszero,aux[i,:])
-        append!(z, zeros(eltype(aux),siz-length(z)))
+        z = filter(!iszero, tk48[i,:])
+        append!(z, zeros(T,siz-length(z)))
         aux[i,:] = z
     end
     return aux
 end
+"""
+    otherUp(game)
 
-function otherUp(tk48::Matrix)
-    aux = copy(tk48)
+Returns a matrix where all non zero elements are pushes to the top.
+"""
+function otherUp(tk48::Matrix{T}) where T
+    aux = similar(tk48)
     siz = size(aux,2)
     for j in 1:siz
-        z = filter!(!iszero,aux[:,j])
-        append!(z, zeros(eltype(aux),siz-length(z)))
+        z = filter(!iszero, tk48[:,j])
+        append!(z, zeros(T,siz-length(z)))
         aux[:,j] = z
     end
     return aux
 end
 
-#= delta is ment to capture how good a board is based on the difference
-each tile has with its adjacent tiles =#
-function delta(tk48::Matrix)
-    lin = Matrix{eltype(tk48)}(undef, size(tk48).-(0,1))
+"""
+    delta(game) -> lines_Δ, columns_Δ
+
+returns two matrices, first contains the deltas with respect to lines and
+second the deltas with respect to columns
+"""
+function delta(tk48::Matrix{T}) where T
+    lines, columns = size(tk48)
+    lin = Matrix{T}(undef, lines, columns-1)
     aux = otherLeft(tk48)
-    for j in 1:size(lin)[2]
+    for j in 1:columns-1
         lin[:,j] = aux[:,j]-aux[:,j+1]
     end
-    col = Matrix{eltype(tk48)}(undef, size(tk48).-(1,0))
+    col = Matrix{T}(undef, lines-1, columns)
     aux = otherUp(tk48)
-    for i in 1:size(col)[1]
+    for i in 1:lines-1
         col[i,:] = aux[i,:]-aux[i+1,:]
     end
     return lin,col
 end
-featureDelta(tk48::Matrix) = sum(sum.(abs,delta(tk48)))
+"""
+    featureDelta(game)
 
-featureZeros(x::Matrix) = sum(iszero.(x))
-featureNotZeros(x::Matrix) = sum(.!iszero.(x))
+Returns absolute sum of deltas for game board
+"""
+function featureDelta(tk48::Matrix)
+    l, col = delta(tk48)
+    return sum(abs, l) + sum(abs, c)
+end
+"""
+    featureZeros(game) -> Int
+
+Returns the count of zeros on game board
+"""
+featureZeros(x::Matrix) = count(iszero, x)
+"""
+    featureNotZeros(game) -> Int
+
+Returns the count of non-zeros on game board
+"""
+featureNotZeros(x::Matrix) = count(!iszero, x)
 function featureMaxCornerAmp(x::Matrix)
     k1 = maximum([x[1,1],x[1,end],x[end,1],x[end,end]])
     k = maximum(x)

@@ -1,5 +1,12 @@
 include("2048.jl")
 
+"""
+Rotate game in desired direction
+"""
+rotateClock(tk48::Matrix) = reverse(tk48',dims=2)
+rotateCounterClock(tk48::Matrix) = reverse(tk48',dims=1)
+
+
 reLU(x::Number) = max(0., x)
 ∇reLU(x::Number) = x >= 0. ? 1. : 0.
 
@@ -144,7 +151,7 @@ function createFeatureVector(tk48::Matrix)
     push!(x,featureDelta(tk48)./80.)
     t = delta(tk48)
     aux = featureSignFlip(t)./3.
-    # deleted featurePoints, left it here for fear of dimension mismatch 
+    # deleted featurePoints, left it here for fear of dimension mismatch
     append!(x, featurePoints(t)./10.)
     append!(x, aux[1])
     append!(x, aux[2])

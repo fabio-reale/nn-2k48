@@ -116,17 +116,25 @@ AND decreasing values per line or column. The reasoning is that monotonic
 boards are best boards
 =#
 signfliptest = :(t=[2 1 1 1; 4 2 4 3; 2 2 4 1; 2 1 4 4]) # pra testar signflip
+"""
+    countFlips(v)
+
+Auxiliary function for featureSignFlip.
+Counts number of times the sign is fliped in vector v.
+"""
 function countFlips(v::Vector)
-    if iszero(v)
-        return 0
-    else
-        s = 1
-        for i in 2:length(v)
-            s += isequal(sign(v[i-1]), sign(-v[i]))
-        end
-        return s
+    !iszero(v[1]) ? s = 1 : s = 0
+    for i in 2:length(v)
+        !iszero(v[i]) ? s += !isequal(sign(v[i-1]), sign(v[i])) : nothing
     end
+    return s
 end
+"""
+    featureSignFlip(game)-> Int
+
+Returns the total amout of change in monotonicity in game.
+featureSignFlip(delta(game)) returns this number on a line by line basis (and column by column as well)
+"""
 function featureSignFlip(del::NTuple)
     l = size(del[1])[1]
     c = size(del[2])[2]
@@ -136,6 +144,11 @@ function featureSignFlip(del::NTuple)
 end
 featureSignFlip(x::Matrix) = sum(sum.(featureSignFlip(delta(x))))
 
+"""
+    featureSum(game)
+
+Returns the sum of all other features for game board
+"""
 function featureSum(x::Matrix)
     s = featureNotZeros(x)
     s+= featureSignFlip(x)
@@ -171,7 +184,7 @@ function greedyStrats(tk48::Matrix)
             max_ind = i
         end
     end
-    iszero(max_ind) ? return nothing : return max_ind
+    return iszero(max_ind) ? nothing : max_ind
 end
 
 function greedyFeatureStrats(tk48::Matrix)
@@ -185,7 +198,7 @@ function greedyFeatureStrats(tk48::Matrix)
             min_ind = i
         end
     end
-    iszero(min_ind) ? return nothing : return min_ind
+    return iszero(min_ind) ? nothing : min_ind
 end
 
 function greedyNetStrats(tk48::Matrix, w::Vector)

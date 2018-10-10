@@ -190,7 +190,7 @@ Alters game board to the next state acording to play_direction (up = 4;down=2;ri
 New score is returned, not altered.
 If chance_double=true there is a 1/16 chance that game will double every tile prior to drawing new tile
 """
-function play!(tk48::Matrix, pscore::Real, dir::Int; dob::Bool=false)
+function play!(tk48::Matrix, pscore::Real, dir::Int, dob::Bool)
     f = [moveUp!, moveRight!, moveDown!, moveLeft!]
     score, moved = f[1+mod(dir,4)](tk48)
     if moved
@@ -213,3 +213,6 @@ function play!(tk48::Matrix, pscore::Real, dir::Int; dob::Bool=false)
     #printM(tk48," 2048")
     return pscore
 end
+play!(tk48::Matrix, pscore::Real, dir::Int) = play!(tk48,pscore,dir,false)
+play!(tk48::Matrix, pscore::Real, nothing) = play!(tk48,pscore,nothing,dob)
+play!(tk48::Matrix, pscore::Real, nothing, dob::Bool) = pscore # ok if play!returns nothing?

@@ -1,5 +1,3 @@
-include("2048.jl")
-
 """
 Rotate game in desired direction
 """
@@ -16,7 +14,7 @@ reLU2(x::Number) = x <= .5 ? max(0., x) : min(x, 1.)
 pwLin(x::Number) = max(.001*x,x)
 ∇pwLin(x::Number) = x >= 0. ? 1. : .001 # mandar saída pra cá
 
-sigm(x::Number) = (1./(1+exp(-x)))
+sigm(x::Number) = (1./(1+exp(-x))) # deprecated notation
 ∇sigm(x::Number) = x*(1-x) # mandar saída pra cá
 
 ∇tanh(x::Number) = 1. - x^2 # mandar saída pra cá
@@ -75,7 +73,7 @@ function train(w::Vector, tk48::Matrix, lr::Float64=.1)
     y = zeros(Float64,4)
     for i in 1:4
         # figuring out correct score values per play
-        y[i] = play!(copy(tk48),0,i)
+        y[i] = play!(copy(tk48),0,i) # ok if play!returns nothing?
     end
     y *= .01
     dw = backProp(w, x, y)
@@ -133,7 +131,7 @@ function createBatch(tk48::Vector,n::Int64=0)
     for j in 1:n
         for i in 1:4
             # figuring out correct score values per play
-            y[i,j] = .007*play!(copy(tk48[ind[j]]),0,i)
+            y[i,j] = .007*play!(copy(tk48[ind[j]]),0,i) # ok if play!returns nothing?
         end
     end
     x = zeros(Float64,m,n)
@@ -167,7 +165,7 @@ function createFeatureBatch(tk48::Matrix,w::Vector,γ::Float64=0.1)
     y = zeros(Float64,4)
     for i in 1:4
         aux = copy(tk48)
-        y[i] = .007*play!(aux,0,i)
+        y[i] = .007*play!(aux,0,i) # ok if play!returns nothing?
         if iszero(y[i])
             y[i]-=.1
         elseif gameOver(aux) && maximum(aux) < 11
@@ -194,7 +192,7 @@ function oneHotBatch(tk48::Matrix,w::Vector,γ::Float64=0.)
     y = zeros(Float64,4)
     for i in 1:4
         aux = copy(tk48)
-        y[i] = .007*play!(aux,0,i)
+        y[i] = .007*play!(aux,0,i) # ok if play!returns nothing?
         if iszero(y[i])
             y[i]-=.1
         end
@@ -331,7 +329,7 @@ for j in n:-1:1
         end
         k = rand(1:20)
         if k == eps
-            score = play!(tk48,score,rand(1:4))
+            score = play!(tk48,score,rand(1:4)) # ok if play!returns nothing?
         else
             score = safeOneHotNetPlay!(tk48,score,w,γ)
         end
@@ -388,7 +386,7 @@ for j in 20:-1:1
             w = featureTrain(w,tk48,lr,γ)
             k = rand(1:40)
             if k == 1
-                score = play!(tk48,score,rand(1:4))
+                score = play!(tk48,score,rand(1:4)) # ok if play!returns nothing?
             else
                 score = greedyFeatureNetPlay!(tk48,score,w,γ)
             end

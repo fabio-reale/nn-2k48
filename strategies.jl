@@ -157,7 +157,7 @@ function naiveStrats(tk48::Matrix,seed::Int=1,dir::Int=1)
             return i
         end
     end
-    return seed
+    return nothing
 end
 
 function greedyStrats(tk48::Matrix)
@@ -171,7 +171,7 @@ function greedyStrats(tk48::Matrix)
             max_ind = i
         end
     end
-    return max_ind
+    iszero(max_ind) ? return nothing : return max_ind
 end
 
 function greedyFeatureStrats(tk48::Matrix)
@@ -185,7 +185,7 @@ function greedyFeatureStrats(tk48::Matrix)
             min_ind = i
         end
     end
-    return min_ind
+    iszero(min_ind) ? return nothing : return min_ind
 end
 
 function greedyNetStrats(tk48::Matrix, w::Vector)
@@ -233,6 +233,7 @@ function safeOneHotNetStrats(tk48::Matrix,w::Vector,γ::Float64,pscore::Real)
     return pscore,k
 end
 
+# ok if play!returns nothing?
 naivePlay!(tk48::Matrix,pscore::Real;seed::Int64=1,dir::Int64=1,double::Bool=false) = play!(tk48,pscore,naiveStrats(tk48,seed,dir),dob=double)
 greedyPlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyStrats(tk48),dob=double)
 greedyFeaturePlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyFeatureStrats(tk48),dob=double)

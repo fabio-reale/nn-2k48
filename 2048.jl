@@ -172,7 +172,7 @@ function double!(tk48::Matrix)
 end
 
 """
-Returns true if game is over
+Returns true if game is over (either win or loose with no distinction)
 """
 function gameOver(tk48::Matrix)
     win = maximum(tk48) >= 11
@@ -183,7 +183,13 @@ function gameOver(tk48::Matrix)
     return !moved || win
 end
 
-#up = 4; down = 2; right = 1; left = 3;
+"""
+    play!(game, score, play_direction [, chance_double=false]) -> updated pscore
+
+Alters game board to the next state acording to play_direction (up = 4;down=2;right=1;left=3).
+New score is returned, not altered.
+If chance_double=true there is a 1/16 chance that game will double every tile prior to drawing new tile
+"""
 function play!(tk48::Matrix, pscore::Real, dir::Int; dob::Bool=false)
     f = [moveUp!, moveRight!, moveDown!, moveLeft!]
     score, moved = f[1+mod(dir,4)](tk48)

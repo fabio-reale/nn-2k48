@@ -25,7 +25,7 @@ end
 """
     newGame(T=Int, n=4)
 
-Returns a board of size n x n where the types of theelements are T and 1 legal move has been made
+Returns a board of size n x n where the types of the elements are T and 1 legal move has been made
 """
 function newGame(T::Type=Int, siz::Int=4)
     tk48 = zeros(T,siz,siz)
@@ -198,12 +198,12 @@ end
 """
     play!(game, score, play_direction [, chance_double=false]) -> updated pscore
 
-Alters game board to the next state acording to play_direction (up = 4;down=2;right=1;left=3).
+Alters game board to the next state acording to play_direction (up=1;down=4;right=2;left=3).
 New score is returned, not altered, for legal move. For illegal moves returns nothing
 If chance_double=true there is a 1/16 chance that game will double every tile prior to drawing new tile
 """
 function play!(tk48::Matrix, pscore::Real, dir::Int, dob::Bool)
-    moveDirec! = [moveUp!, moveRight!, moveDown!, moveLeft!]
+    moveDirec! = [moveDown!, moveUp!, moveRight!, moveLeft!]
     score = moveDirec![1+mod(dir,4)](tk48)
     if issomething(score)
         score += pscore+1 # legal moves get a point

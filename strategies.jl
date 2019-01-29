@@ -173,18 +173,21 @@ function naiveStrats(tk48::Matrix,seed::Int=1,dir::Int=1)
     return nothing
 end
 
+"""
+    greedyStrats(game) -> direction of maximum score move
+
+If there are no legal moves, returns nothing.
+"""
 function greedyStrats(tk48::Matrix)
-    aux = 0
-    max = 0
-    max_ind = 0
-    for i in 1:4
-        aux = play!(copy(tk48),0,i)
-        if aux > max
-            max = aux
-            max_ind = i
-        end
+    moveScores = [play!(copy(tk48),0,i) for i in 1:4]
+    legalMoves = findall(issomething, moveScores)
+    if length(legalMoves) > 0
+        moveScores = moveScores[legalMoves]
+        greedIndex = argmax(moveScores)
+        return legalMoves[greedIndex]
+    else
+        return nothing
     end
-    return iszero(max_ind) ? nothing : max_ind
 end
 
 function greedyFeatureStrats(tk48::Matrix)

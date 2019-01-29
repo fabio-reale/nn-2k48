@@ -30,9 +30,7 @@ Returns a board of size n x n where the types of theelements are T and 1 legal m
 function newGame(T::Type=Int, siz::Int=4)
     tk48 = zeros(T,siz,siz)
     tk48[rand(1:(siz*siz))] = 1
-    score = 0
-    while iszero(score)
-        score = play!(tk48,score,rand(1:4))
+    while isnothing( play!(tk48,0,rand(1:4)) )
     end
     return tk48, convert(T,0)
 end
@@ -191,9 +189,10 @@ function gameOver(tk48::Matrix)
     if maximum(tk48) >= 11
         return true
     else
-        moveDirec = [moveUp, moveRight, moveDown, moveLeft]
+        moveDirec = [moveUp, moveRight, moveLeft, moveDown]
         moved = [moveDirec[i](tk48) for i in 1:4]
         return all(isnothing, moved)
+    end
 end
 
 """

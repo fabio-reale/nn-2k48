@@ -210,6 +210,7 @@ function oneHotBatch(tk48::Matrix,w::Vector,γ::Float64=0.)
     return x,y
 end
 
+# Jesus! use pwd()!!!!
 s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\weight.jl"
 function saveWtoFile(w::Vector; file="weight", var_name="w")
     s = "C:\\Users\\chong\\Downloads\\Julia\\Programas\\"*file*".jl"

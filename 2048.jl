@@ -208,7 +208,7 @@ function play!(tk48::Matrix, pscore::Real, dir::Int, dob::Bool)
     if issomething(score)
         score += pscore+1 # legal moves get a point
         if maximum(tk48) >= 11
-            pscore += 20
+            score += 20
         end
         # randomly double entire board (used to create high end boards)
         if dob

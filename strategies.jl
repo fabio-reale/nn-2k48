@@ -55,7 +55,7 @@ end
 Returns absolute sum of deltas for game board
 """
 function featureDelta(tk48::Matrix)
-    l, col = delta(tk48)
+    l, c = delta(tk48)
     return sum(abs, l) + sum(abs, c)
 end
 """
@@ -115,7 +115,6 @@ signflip is related to the delta feature, idea is to acount for increasing
 AND decreasing values per line or column. The reasoning is that monotonic
 boards are best boards
 =#
-signfliptest = :(t=[2 1 1 1; 4 2 4 3; 2 2 4 1; 2 1 4 4]) # pra testar signflip
 """
     countFlips(v)
 
@@ -158,19 +157,14 @@ function featureSum(x::Matrix)
     return s
 end
 
+"""
+    naiveStrats(game) -> returns index of first legal move
 
-
-function naiveStrats(tk48::Matrix,seed::Int=1,dir::Int=1)
-    if  dir != 1
-        dir = -1
-    end
-    p = collect(seed:dir:seed+(3*dir))
-    for i in p
-        if !iszero(play!(copy(tk48),0,i))
-            return i
-        end
-    end
-    return nothing
+Preference order is Up, Right, Left, Down
+"""
+function naiveStrats(tk48::Matrix)
+    moveScores = [play!(copy(tk48),0,i) for i in 1:4]
+    return findfirst(issomething, moveScores)
 end
 
 """
@@ -190,18 +184,23 @@ function greedyStrats(tk48::Matrix)
     end
 end
 
+"""
+    greedyFeatureStrats(game) -> direction of maximum featureSum move
+
+If there are no legal moves, returns nothing.
+"""
 function greedyFeatureStrats(tk48::Matrix)
     min = Inf
-    min_ind = 0
+    min_ind = nothing
     for i in 1:4
         x = copy(tk48)
-        iszero(play!(x,0,i)) ? aux = Inf : aux = featureSum(x)
+        isnothing(play!(x,0,i)) ? aux = Inf : aux = featureSum(x)
         if aux < min
             min = aux
             min_ind = i
         end
     end
-    return iszero(min_ind) ? nothing : min_ind
+    return min_ind
 end
 
 function greedyNetStrats(tk48::Matrix, w::Vector)
@@ -249,11 +248,6 @@ function safeOneHotNetStrats(tk48::Matrix,w::Vector,γ::Float64,pscore::Real)
     return pscore,k
 end
 
-# ok if play!returns nothing?
-naivePlay!(tk48::Matrix,pscore::Real;seed::Int64=1,dir::Int64=1,double::Bool=false) = play!(tk48,pscore,naiveStrats(tk48,seed,dir),dob=double)
-greedyPlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyStrats(tk48),dob=double)
-greedyFeaturePlay!(tk48::Matrix,pscore::Real;double::Bool=false) = play!(tk48,pscore,greedyFeatureStrats(tk48),dob=double)
-
 greedyFeatureNetPlay!(tk48::Matrix,pscore::Real,w::Vector,γ::Float64) = play!(tk48,pscore,greedyFeatureNetStrats(tk48,w,γ))
 safeFeatureNetPlay!(tk48::Matrix,pscore::Real,w::Vector,γ::Float64) = play!(tk48,safeFeatureNetStrats(tk48,w,γ,pscore)...)
 
@@ -271,11 +265,17 @@ function greedyNetPlay!(tk48::Matrix,pscore::Real,w::Vector)
     return auxscore
 end
 
-function playStrategy(f)
+"""
+    playStrategy(strat) -> final (game, score)
+
+Starts a new game, then plays it according to strategy strats.
+Returns final game board and score .
+"""
+function playStrategy(strat)
     G, score = newGame()
     while !gameOver(G)
-        score = f(G, score)
+        score = play!(G, score, strat(G))
     end
-    printM(G,"\nscore: $(score)\n")
-    #return G, score
+    #printM(G,"\nscore: $(score)\n")
+    return G, score
 end

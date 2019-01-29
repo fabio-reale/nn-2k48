@@ -37,10 +37,14 @@ function newGame(T::Type=Int, siz::Int=4)
     return tk48, convert(T,0)
 end
 
+isnothing(x) = (x == nothing)
+issomething = !isnothing
+
 """
     moveDown!(game) -> move_score
 
 Executes moving the pieces down in game board. Returns the score produced by this move.
+If this is an illegal move, returns nothing.
 Other moves are moveRight!, moveUp! and moveLeft!
 """
 function moveDown!(tk48::Matrix{T}) where T
@@ -68,12 +72,15 @@ function moveDown!(tk48::Matrix{T}) where T
         moved |= !iszero(tk48[:,j] - z)
         tk48[:,j] = z
     end
-    return score, moved
+    return moved ? score : nothing
 end
+moveDown(tk48::Matrix) = moveDown!(copy(tk48))
+
 """
     moveUp!(game) -> move_score
 
 Executes moving the pieces up in game board. Returns the score produced by this move.
+If this is an illegal move, returns nothing.
 Other moves are moveRight!, moveDown! and moveLeft!
 """
 function moveUp!(tk48::Matrix{T}) where T
@@ -97,12 +104,15 @@ function moveUp!(tk48::Matrix{T}) where T
         moved |= !iszero(tk48[:,j] - z)
         tk48[:,j] = z
     end
-    return score, moved
+    return moved ? score : nothing
 end
+moveUp(tk48::Matrix) = moveUp!(copy(tk48))
+
 """
     moveRight!(game) -> move_score
 
 Executes moving the pieces down in game board. Returns the score produced by this move.
+If this is an illegal move, returns nothing.
 Other moves are moveDown!, moveUp! and moveLeft!
 """
 function moveRight!(tk48::Matrix{T}) where T
@@ -127,12 +137,15 @@ function moveRight!(tk48::Matrix{T}) where T
         moved |= !iszero(tk48[i,:] - z)
         tk48[i,:] = z
     end
-    return score, moved
+    return moved ? score : nothing
 end
+moveRight(tk48::Matrix) = moveRight!(copy(tk48))
+
 """
     moveLeft!(game) -> move_score
 
 Executes moving the pieces down in game board. Returns the score produced by this move.
+If this is an illegal move, returns nothing.
 Other moves are moveDown!, moveUp! and moveRight!
 """
 function moveLeft!(tk48::Matrix{T}) where T
@@ -156,9 +169,9 @@ function moveLeft!(tk48::Matrix{T}) where T
         moved |= !iszero(tk48[i,:] - z)
         tk48[i,:] = z
     end
-    return score, moved
+    return moved ? score : nothing
 end
-
+moveLeft(tk48::Matrix) = moveLeft!(copy(tk48))
 
 """
 Doubles every non-empty tile in game board
@@ -175,44 +188,42 @@ end
 Returns true if game is over (either win or loose with no distinction)
 """
 function gameOver(tk48::Matrix)
-    win = maximum(tk48) >= 11
-    moved = moveUp!(copy(tk48))[2]
-    moved |= moveDown!(copy(tk48))[2]
-    moved |= moveRight!(copy(tk48))[2]
-    moved |= moveLeft!(copy(tk48))[2]
-    return !moved || win
+    if maximum(tk48) >= 11
+        return true
+    else
+        moveDirec = [moveUp, moveRight, moveDown, moveLeft]
+        moved = [moveDirec[i](tk48) for i in 1:4]
+        return all(isnothing, moved)
 end
 
 """
     play!(game, score, play_direction [, chance_double=false]) -> updated pscore
 
 Alters game board to the next state acording to play_direction (up = 4;down=2;right=1;left=3).
-New score is returned, not altered.
+New score is returned, not altered, for legal move. For illegal moves returns nothing
 If chance_double=true there is a 1/16 chance that game will double every tile prior to drawing new tile
 """
 function play!(tk48::Matrix, pscore::Real, dir::Int, dob::Bool)
-    f = [moveUp!, moveRight!, moveDown!, moveLeft!]
-    score, moved = f[1+mod(dir,4)](tk48)
-    if moved
-        pscore += score+1 # legal moves get a point
+    moveDirec! = [moveUp!, moveRight!, moveDown!, moveLeft!]
+    score = moveDirec![1+mod(dir,4)](tk48)
+    if issomething(score)
+        score += pscore+1 # legal moves get a point
         if maximum(tk48) >= 11
             pscore += 20
         end
         # randomly double entire board (used to create high end boards)
         if dob
-            j = rand(1:16)
-            if j == 1
+            if rand(1:16) == 1
                 double!(tk48)
             end
         end
-        # choose new tile and add its score
+        # choose new tile and place it
         i = rand(findall(iszero,tk48))
         k = rand(1:10)
         k == 2 ? tk48[i] = 2 : tk48[i] = 1
     end
-    #printM(tk48," 2048")
-    return pscore
+    return score
 end
 play!(tk48::Matrix, pscore::Real, dir::Int) = play!(tk48,pscore,dir,false)
-play!(tk48::Matrix, pscore::Real, nothing) = play!(tk48,pscore,nothing,dob)
-play!(tk48::Matrix, pscore::Real, nothing, dob::Bool) = pscore # ok if play!returns nothing?
+play!(tk48::Matrix, pscore::Real, nothing) = nothing
+play!(tk48::Matrix, pscore::Real, nothing, dob::Bool) = nothing

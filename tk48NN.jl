@@ -4,29 +4,46 @@ Rotate game in desired direction
 rotateClock(tk48::Matrix) = reverse(tk48',dims=2)
 rotateCounterClock(tk48::Matrix) = reverse(tk48',dims=1)
 
+"""
+reLU, or rectifier Linear Unit. Most popular activation function for NNs
+"""
+reLU(x::Number) = max(0.0, x)
+∇reLU(x::Number) = x >= 0.0 ? 1.0 : 0.0
 
-reLU(x::Number) = max(0., x)
-∇reLU(x::Number) = x >= 0. ? 1. : 0.
+"""
+reLU2 is a piecewise linear aproximation to sigmoid function, with 3 segments.
+reLU(x) == reLU2(x) for x <= 1.0
+"""
+reLU2(x::Number) = x <= 0.5 ? max(0.0, x) : min(x, 1.0)
+∇reLU2(x::Number) = 0.0 <= x <= 1.0 ? 1.0 : 0.0
 
-reLU2(x::Number) = x <= .5 ? max(0., x) : min(x, 1.)
-∇reLU2(x::Number) = 0. <= x <= 1. ? 1. : 0.
+"""
+pwLin stands for piecewise Linear. Its near zero (~0) on negative side.
+reLU(x) == pwLin(x) for x > 0
+"""
+pwLin(x::Number) = max(0.001*x,x)
+∇pwLin(x::Number) = x >= 0.0 ? 1.0 : 0.001
 
-pwLin(x::Number) = max(.001*x,x)
-∇pwLin(x::Number) = x >= 0. ? 1. : .001 # mandar saída pra cá
+"""
+sigmoid function. The classic perceptron activation function.
+It can be thougth of as the continuous aproximation of the ladder function
+"""
+sigm(x::Number) = ( 1.0/(1+exp(-x)) )
+∇sigm(x::Number) = x*(1-x)
 
-sigm(x::Number) = (1./(1+exp(-x))) # deprecated notation
-∇sigm(x::Number) = x*(1-x) # mandar saída pra cá
+"""
+tanh is implemented in Base. Only ∇tanh is required
+"""
+∇tanh(x::Number) = 1.0 - x^2 # mandar saída pra cá
 
-∇tanh(x::Number) = 1. - x^2 # mandar saída pra cá
-
+"""
+mean squared error. For vectors this is L2 norm (is it?).
+For matrices, it's the mean value of mse when applied to each column
+"""
+# why 0.5? I think this is mistake
 mse(z::Vector) = 0.5*sum(abs2,z)
-function mse(z::Matrix)
-    out = 0
-    for i in 1:size(z)[2]
-        out += 0.5*sum(abs2, z[:,i])
-    end
-    return out/size(z)[2]
-end
+mse(z::Matrix) = sum(maplices(mse,A,dims=1))/size(z)[2]
+
 
 loss(w,x,y) = mse(feedf(w,x)[end]-y)
 
@@ -68,7 +85,7 @@ function train(w::Vector, tk48::Matrix, lr::Float64=.1)
     # preparing x, the sample vector, including normalization step
     x = copy(tk48)
     x = 12.0 .- reshape(x,prod(size(tk48)),1)
-    x = 1./x
+    x = 1.0/x
     # creating, calculating, then normalizing y
     y = zeros(Float64,4)
     for i in 1:4
@@ -137,7 +154,7 @@ function createBatch(tk48::Vector,n::Int64=0)
     x = zeros(Float64,m,n)
     for j in 1:n
         x[:,j] = 12.0 .- reshape(copy(tk48[ind[j]]),m,1)
-        x[:,j] = 1./x[:,j]
+        x[:,j] = 1.0/x[:,j]
     end
     return x,y
 end
@@ -165,11 +182,11 @@ function createFeatureBatch(tk48::Matrix,w::Vector,γ::Float64=0.1)
     y = zeros(Float64,4)
     for i in 1:4
         aux = copy(tk48)
-        y[i] = .007*play!(aux,0,i) # ok if play!returns nothing?
+        y[i] = 0.007*play!(aux,0,i) # ok if play!returns nothing?
         if iszero(y[i])
-            y[i]-=.1
+            y[i]-=0.1
         elseif gameOver(aux) && maximum(aux) < 11
-            y[i]-=.1
+            y[i]-=0.1
         end
         aux = createFeatureVector(aux)
         y[i]+= γ*maximum(feedf(w,aux)[end])
@@ -181,7 +198,7 @@ function oneHotVector(tk48::Matrix{Int64})
     x = Float64[]
     for i in tk48
         aux = zeros(Float64,12)
-        iszero(i) ? aux[12] = 1. : aux[i] = 1.
+        iszero(i) ? aux[12] = 1.0 : aux[i] = 1.0
         append!(x,aux)
     end
     return x
@@ -302,6 +319,13 @@ end
 
 #tk48 = [0 0 0; 1 2 1; 2 3 3]
 #This section is for the one hot learner
+
+#=
+
+
+
+
+
 tk48 = newGame()[1]
 x = oneHotVector(tk48)
 w = [(1./200)*rand(Float64,175,length(x)),zeros(Float64,175),
@@ -450,3 +474,8 @@ for i in 1:n
         println("zer = ",zer,"\n")=#
     end
 end
+
+
+
+
+=#

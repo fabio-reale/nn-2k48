@@ -37,12 +37,11 @@ tanh is implemented in Base. Only ∇tanh is required
 ∇tanh(x::Number) = 1.0 - x^2 # mandar saída pra cá
 
 """
-mean squared error. For vectors this is L2 norm (is it?).
+mean squared error. For vectors this is L2 norm.
 For matrices, it's the mean value of mse when applied to each column
 """
-# why 0.5? I think this is mistake
-mse(z::Vector) = 0.5*sum(abs2,z)
-mse(z::Matrix) = sum(maplices(mse,A,dims=1))/size(z)[2]
+mse(z::Vector) = sum(abs2,z)/size(z)[1]
+mse(z::Matrix) = sum(mapslices(mse,z,dims=1))/size(z)[2]
 
 
 loss(w,x,y) = mse(feedf(w,x)[end]-y)

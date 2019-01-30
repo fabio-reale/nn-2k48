@@ -1,3 +1,8 @@
+# for testing feedf e backProp:
+M = reshape( collect(1.0:12.0), 2, 3 )
+w = [M, ones(Float64, 2)]
+y = [13.0, 30.0]
+
 """
 Rotate game in desired direction
 """
@@ -46,6 +51,8 @@ mse(z::Matrix) = sum(mapslices(mse,z,dims=1))/size(z)[2]
 
 loss(w,x,y) = mse(feedf(w,x)[end]-y)
 
+# this one is weird. It looks like this requires only one output
+# this seem to be
 function backProp(w::Vector,x::Vector,y::Vector)
     ff = feedf(w,x)
     dw = similar(w)
@@ -71,13 +78,31 @@ function backProp(w::Vector,x::Matrix,y::Matrix)
     return dw
 end
 
+# probably w is vector of matrices of weights and x is column vector input
+# size(w[1]) = ( size(i+1)[2] , size(x)[1])
+# size(w[i]) = ( size(i+1)[2] , size(i-2)[1])   if (i%2 == 1) && i > 1
+# size(w[i]) = ( size(i-1)[1] , 1)              if (i%2 == 0)
 function feedf(w::Vector,x)
-    ff = [copy(x)]
-    for i in 1:2:length(w)
-        push!(ff, w[i]*ff[i] .+ w[i+1])
+    ff = [copy(x)] # first output column is x, the input
+    for i in 1:2:length(w) # ff columns alternate: linear, activation
+        push!(ff, w[i]*ff[i] .+ w[i+1]) # Ax+b
         push!(ff, reLU.(ff[i+1]))
     end
     return ff
+end
+
+# ment to ease testing diferent activation functions.
+# Returns a feedf function where activation function is activFunc
+function activateFeedF(activFunc)
+    function feedf(w::Vector, x)
+        ff = [copy(x)]
+        for i in 1:2:length(w)
+            push!(ff, w[i]*ff[i] .+ w[i+1])
+            push!(ff, activFunc.(ff[i+1]))
+        end
+        return ff
+    end
+    return feedf
 end
 
 function train(w::Vector, tk48::Matrix, lr::Float64=.1)

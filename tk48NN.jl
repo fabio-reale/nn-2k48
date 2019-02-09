@@ -51,6 +51,27 @@ mse(z::Matrix) = sum(mapslices(mse,z,dims=1))/size(z)[2]
 
 loss(w,x,y) = mse(feedf(w,x)[end]-y)
 
+"""
+    initializeWeights(v) -> [random weight matrices]
+
+Input v specifies #perceptrons/layer.
+First parameter should be the input dimension.
+Each subsequent parameter specifies the number of perceptrons in the next layer.
+v can be just a list of parameters, e.g. intializeWeights(10,5,3,2), a list,
+e.g. intializeWeights([10,5,3,2]) or input dimension followed by parameter list,
+e.g. intializeWeights(10,[5,3,2])
+"""
+function initializeWeights(v...)
+    w = [rand(v[2],v[1]), rand(v[2])]
+    for i in 2:(length(v)-1)
+        temp = [rand(v[i+1],v[i]), rand(v[i+1])]
+        append!(w,temp)
+    end
+    return w
+end
+initializeWeights(v::Vector) = initializeWeights(v...)
+initializeWeights(inp, v) = initializeWeights(inp, v...)
+
 # this one is weird. It looks like this requires only one output
 # this seem to be
 function backProp(w::Vector,x::Vector,y::Vector)
